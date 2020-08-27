@@ -1,5 +1,11 @@
 import { register, login, logout, getInfo } from "@/api/user";
-import { getToken, setToken, removeToken } from "@/utils/auth";
+import {
+  getToken,
+  setToken,
+  removeToken,
+  getUserName,
+  setUserName
+} from "@/utils/auth";
 import router, { resetRouter } from "@/router";
 
 const state = {
@@ -35,8 +41,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password })
         .then(response => {
-          const { data } = response;
           commit("SET_TOKEN", "admin-token");
+          setUserName(username);
           setToken("admin-token");
           resolve();
         })
@@ -66,29 +72,17 @@ const actions = {
       getInfo(state.token)
         .then(response => {
           const { data } = response;
-
-          // if (!data) {
-          //   reject("Verification failed, please Login again.");
-          // }
-
-          // const { roles, name, avatar, introduction } = data;
-
-          // // roles must be a non-empty array
-          // if (!roles || roles.length <= 0) {
-          //   reject("getInfo: roles must be a non-null array!");
-          // }
-
+          if (!data) {
+            reject("Verification failed, please Login again.");
+          }
           const roles = ["admin"];
           const name = "Super Admin";
           const avatar =
             "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif";
           const introduction = "I am a super administrator";
-
-          console.log(roles, name, avatar, introduction);
-
           commit("SET_ROLES", roles);
-          commit("SET_NAME", name);
           commit("SET_AVATAR", avatar);
+          commit("SET_NAME", getUserName());
           commit("SET_INTRODUCTION", introduction);
 
           let newData = { roles, name, avatar, introduction };

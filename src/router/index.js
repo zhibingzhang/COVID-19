@@ -97,7 +97,7 @@ export const asyncRoutes = [
     alwaysShow: true, // will always show the root menu
     name: "Permission",
     meta: {
-      title: "Permission",
+      title: "用户管理",
       icon: "lock",
       roles: ["admin", "editor"] // you can set roles in root nav
     },
@@ -107,7 +107,7 @@ export const asyncRoutes = [
         component: () => import("@/views/permission/page"),
         name: "PagePermission",
         meta: {
-          title: "Page Permission",
+          title: "管理员列表",
           roles: ["admin"] // or you can only set roles in sub nav
         }
       },
@@ -128,19 +128,6 @@ export const asyncRoutes = [
           title: "Role Permission",
           roles: ["admin"]
         }
-      }
-    ]
-  },
-
-  {
-    path: "/icon",
-    component: Layout,
-    children: [
-      {
-        path: "index",
-        component: () => import("@/views/icons/index"),
-        name: "Icons",
-        meta: { title: "Icons", icon: "icon", noCache: true }
       }
     ]
   },

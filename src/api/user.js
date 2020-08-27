@@ -18,7 +18,7 @@ export function register(data) {
 
 export function getInfo(token) {
   return request({
-    url: "/patient/admin",
+    url: "/admin",
     method: "get",
     params: { token }
   });
@@ -26,7 +26,7 @@ export function getInfo(token) {
 
 export function logout() {
   return request({
-    url: "/vue-element-admin/user/logout",
-    method: "post"
+    url: "/admin",
+    method: "get"
   });
 }
