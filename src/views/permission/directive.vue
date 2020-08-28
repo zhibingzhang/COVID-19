@@ -1,111 +1,279 @@
 <template>
   <div class="app-container">
-    <switch-roles @change="handleRolesChange" />
-    <div :key="key" style="margin-top:30px;">
-      <div>
-        <span v-permission="['admin']" class="permission-alert">
-          Only
-          <el-tag class="permission-tag" size="small">admin</el-tag> can see this
-        </span>
-        <el-tag v-permission="['admin']" class="permission-sourceCode" type="info">
-          v-permission="['admin']"
-        </el-tag>
+    <el-button class="add-user" type="success" @click="handleCreate('create')">
+      添加新患者
+    </el-button>
+    <el-table
+      :key="tableKey"
+      v-loading="listLoading"
+      :data="list"
+      border
+      fit
+      highlight-current-row
+      style="width: 100%;"
+      @sort-change="sortChange"
+    >
+      <el-table-column label="姓名" align="center">
+        <template slot-scope="{ row }">
+          <span>{{ row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="性别" align="center">
+        <template slot-scope="{ row }">
+          <span>{{ row.sex }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="年龄">
+        <template slot-scope="{ row }">
+          <span>{{ row.age }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="家庭住址">
+        <template slot-scope="{ row }">
+          <span>{{ row.diaProvince }} / {{ row.diaCity }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="发现时间">
+        <template slot-scope="{ row }">
+          <span>{{ row.symDate.substring(0, 10) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="诊断说明">
+        <template slot-scope="{ row }">
+          <span>{{ row.symptom }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="确认时间">
+        <template slot-scope="{ row }">
+          <span>{{ row.detecDate.substring(0, 10) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        label="Actions"
+        align="center"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{ row, $index }">
+          <el-button type="primary" size="mini" @click="handleUpdate(row)">
+            Edit
+          </el-button>
+          <el-button
+            v-if="row.status != 'deleted'"
+            size="mini"
+            type="danger"
+            @click="handleDelete(row, $index)"
+          >
+            Delete
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 编辑弹框 -->
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+      <el-form
+        ref="dataForm"
+        :model="temp"
+        label-position="left"
+        label-width="80px"
+        style="width: 400px; margin-left:50px;"
+      >
+        <el-form-item label="姓名">
+          <el-input v-model="temp.name" />
+        </el-form-item>
+        <el-form-item label="性别">
+          <el-radio v-model="temp.sex" label="男">男</el-radio>
+          <el-radio v-model="temp.sex" label="女">女</el-radio>
+        </el-form-item>
+        <el-form-item label="年龄">
+          <el-input v-model="temp.age" />
+        </el-form-item>
+        <el-form-item label="所在省">
+          <el-input v-model="temp.diaProvince" />
+        </el-form-item>
+        <el-form-item label="所在市">
+          <el-input v-model="temp.diaCity" />
+        </el-form-item>
+        <el-form-item label="发现时间">
+          <el-date-picker
+            v-model="temp.symDate"
+            type="date"
+            placeholder="选择日期"
+          >
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="诊断说明"
+          ><el-input
+            v-model="temp.symptom"
+            :autosize="{ minRows: 2, maxRows: 4 }"
+            type="textarea"
+        /></el-form-item>
+        <el-form-item label="确诊时间">
+          <el-date-picker
+            v-model="temp.detecDate"
+            type="date"
+            placeholder="选择日期"
+          >
+          </el-date-picker>
+        </el-form-item>
+      </el-form>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">
+          Cancel
+        </el-button>
+        <el-button
+          type="primary"
+          @click="dialogStatus === 'create' ? createData() : updateData()"
+        >
+          Confirm
+        </el-button>
       </div>
-
-      <div>
-        <span v-permission="['editor']" class="permission-alert">
-          Only
-          <el-tag class="permission-tag" size="small">editor</el-tag> can see this
-        </span>
-        <el-tag v-permission="['editor']" class="permission-sourceCode" type="info">
-          v-permission="['editor']"
-        </el-tag>
-      </div>
-
-      <div>
-        <span v-permission="['admin','editor']" class="permission-alert">
-          Both
-          <el-tag class="permission-tag" size="small">admin</el-tag> and
-          <el-tag class="permission-tag" size="small">editor</el-tag> can see this
-        </span>
-        <el-tag v-permission="['admin','editor']" class="permission-sourceCode" type="info">
-          v-permission="['admin','editor']"
-        </el-tag>
-      </div>
-    </div>
-
-    <div :key="'checkPermission'+key" style="margin-top:60px;">
-      <aside>
-        In some cases, using v-permission will have no effect. For example: Element-UI's Tab component or el-table-column and other scenes that dynamically render dom. You can only do this with v-if.
-        <br> e.g.
-      </aside>
-
-      <el-tabs type="border-card" style="width:550px;">
-        <el-tab-pane v-if="checkPermission(['admin'])" label="Admin">
-          Admin can see this
-          <el-tag class="permission-sourceCode" type="info">
-            v-if="checkPermission(['admin'])"
-          </el-tag>
-        </el-tab-pane>
-
-        <el-tab-pane v-if="checkPermission(['editor'])" label="Editor">
-          Editor can see this
-          <el-tag class="permission-sourceCode" type="info">
-            v-if="checkPermission(['editor'])"
-          </el-tag>
-        </el-tab-pane>
-
-        <el-tab-pane v-if="checkPermission(['admin','editor'])" label="Admin-OR-Editor">
-          Both admin or editor can see this
-          <el-tag class="permission-sourceCode" type="info">
-            v-if="checkPermission(['admin','editor'])"
-          </el-tag>
-        </el-tab-pane>
-      </el-tabs>
-    </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import permission from '@/directive/permission/index.js' // 权限判断指令
-import checkPermission from '@/utils/permission' // 权限判断函数
-import SwitchRoles from './components/SwitchRoles'
-
+import {
+  fetchListPatient,
+  createPatient,
+  updatePatient,
+  deletePatient
+} from "@/api/article";
 export default {
-  name: 'DirectivePermission',
-  components: { SwitchRoles },
-  directives: { permission },
+  name: "PagePermission",
   data() {
     return {
-      key: 1 // 为了能每次切换权限的时候重新初始化指令
-    }
+      list: null, //表格数据源
+      listLoading: true, //加载数据
+      tableKey: 0, // 表格key
+      dialogFormVisible: false, //弹框
+      dialogStatus: "", //弹框类型
+      textMap: {
+        //弹框类型
+        update: "Edit",
+        create: "Create"
+      },
+      temp: {
+        //弹框数据
+        name: "",
+        set: "",
+        age: "",
+        diaProvince: "",
+        diaCity: "",
+        symDate: "",
+        symptom: "",
+        detecDate: ""
+      }
+    };
+  },
+  components: {},
+  created() {
+    this.getList();
   },
   methods: {
-    checkPermission,
-    handleRolesChange() {
-      this.key++
+    getList() {
+      //获取用户列表数据
+      this.listLoading = true;
+      fetchListPatient({ pageSizes: 999 }).then(response => {
+        const { records } = response.data;
+        console.log(response);
+        this.list = records;
+        // Just to simulate the time of the request
+        setTimeout(() => {
+          this.listLoading = false;
+        }, 1.5 * 1000);
+      });
+    },
+    handleCreate() {
+      // 添加新用户
+      this.temp = {
+        //弹框数据
+        name: "",
+        set: "",
+        age: "",
+        diaProvince: "",
+        diaCity: "",
+        symDate: "",
+        symptom: "",
+        detecDate: ""
+      };
+      this.dialogStatus = "create";
+      this.dialogFormVisible = true;
+    },
+    handleUpdate(row) {
+      //更新用户信息
+      this.temp = Object.assign({}, row); // copy obj
+      this.dialogStatus = "update";
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs["dataForm"].clearValidate();
+      });
+    },
+    updateData() {
+      this.$refs["dataForm"].validate(valid => {
+        if (valid) {
+          const tempData = Object.assign({}, this.temp);
+          updateArticle(tempData).then(() => {
+            const index = this.list.findIndex(v => v.id === this.temp.id);
+            this.list.splice(index, 1, this.temp);
+            this.dialogFormVisible = false;
+            this.$notify({
+              title: "Success",
+              message: "Update Successfully",
+              type: "success",
+              duration: 2000
+            });
+          });
+        }
+      });
+    },
+    createData() {
+      this.$refs["dataForm"].validate(valid => {
+        if (valid) {
+          createPatient(this.temp).then(() => {
+            this.list.unshift(this.temp);
+            this.dialogFormVisible = false;
+            this.$notify({
+              title: "Success",
+              message: "Created Successfully",
+              type: "success",
+              duration: 2000
+            });
+          });
+        }
+      });
+    },
+    handleDelete(row, index) {
+      //删除用户信息
+      deleteArticle([row.id]).then(() => {
+        this.$notify({
+          title: "Success",
+          message: "Delete Successfully",
+          type: "success",
+          duration: 2000
+        });
+        this.list.splice(index, 1);
+      });
+    },
+    sortChange(data) {
+      const { prop, order } = data;
+      if (prop === "id") {
+        this.sortByID(order);
+      }
     }
   }
-}
+};
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .app-container {
-  ::v-deep .permission-alert {
-    width: 320px;
-    margin-top: 15px;
-    background-color: #f0f9eb;
-    color: #67c23a;
-    padding: 8px 16px;
-    border-radius: 4px;
-    display: inline-block;
+  .el-dialog {
+    width: 600px;
   }
-  ::v-deep .permission-sourceCode {
-    margin-left: 15px;
-  }
-  ::v-deep .permission-tag {
-    background-color: #ecf5ff;
+  .add-user {
+    margin-bottom: 20px;
   }
 }
 </style>
-
