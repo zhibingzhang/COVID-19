@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-row>
-      <el-col :span="4">
+      <el-col :span="24">
         <el-button
           class="add-user"
           type="success"
@@ -10,13 +10,13 @@
           添加新患者
         </el-button>
       </el-col>
-      <el-col :span="6">
+      <!-- <el-col :span="6">
         <el-input @input="inputChange" v-model="queryValue" />
       </el-col>
       <el-col :span="14">
         <el-button class="add-user" type="success" @click="handleQuery()">
           查询
-        </el-button>
+        </el-button> -->
       </el-col>
     </el-row>
     <el-table
