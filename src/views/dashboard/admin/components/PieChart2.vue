@@ -52,7 +52,7 @@ export default {
         legend: {
           left: "center",
           bottom: "10",
-          data: ["0-10岁", "10-20岁", "20-40岁", "40-60岁", "60+岁"]
+          data: ["男", "女"]
         },
         series: [
           {
@@ -62,11 +62,8 @@ export default {
             radius: [15, 95],
             center: ["50%", "50%"],
             data: [
-              { value: 32, name: "0-10岁" },
-              { value: 240, name: "10-20岁" },
-              { value: 149, name: "20-40岁" },
-              { value: 240, name: "40-60岁" },
-              { value: 390, name: "60+岁" }
+              { value: 320, name: "男" },
+              { value: 240, name: "女" }
             ],
             animationEasing: "cubicInOut",
             animationDuration: 2600
