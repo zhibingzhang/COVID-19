@@ -1,5 +1,5 @@
 module.exports = {
-  title: "COVID-19",
+    title: "全国新冠肺炎联合数据库",
 
   /**
    * @type {boolean} true | false

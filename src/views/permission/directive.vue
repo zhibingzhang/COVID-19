@@ -1,8 +1,24 @@
 <template>
   <div class="app-container">
-    <el-button class="add-user" type="success" @click="handleCreate('create')">
-      添加新患者
-    </el-button>
+    <el-row>
+      <el-col :span="4">
+        <el-button
+          class="add-user"
+          type="success"
+          @click="handleCreate('create')"
+        >
+          添加新患者
+        </el-button>
+      </el-col>
+      <el-col :span="6">
+        <el-input @input="inputChange" v-model="queryValue" />
+      </el-col>
+      <el-col :span="14">
+        <el-button class="add-user" type="success" @click="handleQuery()">
+          查询
+        </el-button>
+      </el-col>
+    </el-row>
     <el-table
       :key="tableKey"
       v-loading="listLoading"
@@ -20,12 +36,17 @@
       </el-table-column>
       <el-table-column label="性别" align="center">
         <template slot-scope="{ row }">
-          <span>{{ row.sex }}</span>
+          <span>{{ row.sex == 10 ? "男" : "女" }}</span>
         </template>
       </el-table-column>
       <el-table-column label="年龄">
         <template slot-scope="{ row }">
           <span>{{ row.age }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="就诊医院">
+        <template slot-scope="{ row }">
+          <span>{{ row.diaHospital }}</span>
         </template>
       </el-table-column>
       <el-table-column label="家庭住址">
@@ -52,6 +73,7 @@
       <el-table-column
         label="Actions"
         align="center"
+        width="150px"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="{ row, $index }">
@@ -69,7 +91,17 @@
         </template>
       </el-table-column>
     </el-table>
-
+    <!-- 分页器 -->
+    <div class="pagination" v-if="list">
+      <el-pagination
+        @current-change="handleCurrentChange"
+        background
+        layout="prev, pager, next"
+        :total="total"
+        :page-size="20"
+      >
+      </el-pagination>
+    </div>
     <!-- 编辑弹框 -->
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form
@@ -83,12 +115,17 @@
           <el-input v-model="temp.name" />
         </el-form-item>
         <el-form-item label="性别">
-          <el-radio v-model="temp.sex" label="男">男</el-radio>
-          <el-radio v-model="temp.sex" label="女">女</el-radio>
+          <el-radio v-model="temp.sex" label="10">男</el-radio>
+          <el-radio v-model="temp.sex" label="20">女</el-radio>
         </el-form-item>
         <el-form-item label="年龄">
           <el-input v-model="temp.age" />
         </el-form-item>
+
+        <el-form-item label="就诊医院">
+          <el-input v-model="temp.diaHospital" />
+        </el-form-item>
+
         <el-form-item label="所在省">
           <el-input v-model="temp.diaProvince" />
         </el-form-item>
@@ -100,21 +137,39 @@
             v-model="temp.symDate"
             type="date"
             placeholder="选择日期"
+            format="yyyy 年 MM 月 dd 日"
+            value-format="yyyy-MM-dd"
           >
+            >
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="诊断说明"
-          ><el-input
+        <el-form-item label="诊断说明">
+          <el-input
             v-model="temp.symptom"
             :autosize="{ minRows: 2, maxRows: 4 }"
             type="textarea"
-        /></el-form-item>
+          />
+        </el-form-item>
         <el-form-item label="确诊时间">
           <el-date-picker
             v-model="temp.detecDate"
             type="date"
             placeholder="选择日期"
+            format="yyyy 年 MM 月 dd 日"
+            value-format="yyyy-MM-dd"
           >
+            >
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="死亡时间">
+          <el-date-picker
+            v-model="temp.dieDate"
+            type="date"
+            placeholder="选择日期"
+            format="yyyy 年 MM 月 dd 日"
+            value-format="yyyy-MM-dd"
+          >
+            >
           </el-date-picker>
         </el-form-item>
       </el-form>
@@ -139,71 +194,71 @@ import {
   fetchListPatient,
   createPatient,
   updatePatient,
-  deletePatient
+  deletePatient,
+  queryName
 } from "@/api/article";
 export default {
   name: "PagePermission",
+  components: {},
   data() {
     return {
-      list: null, //表格数据源
-      listLoading: true, //加载数据
+      list: null, // 表格数据源
+      newList: null, //临时数据
+      listLoading: true, // 加载数据
       tableKey: 0, // 表格key
-      dialogFormVisible: false, //弹框
-      dialogStatus: "", //弹框类型
+      dialogFormVisible: false, // 弹框
+      dialogStatus: "", // 弹框类型
+      total: 0, //总条数
+      currentPage: 1, //第几页
       textMap: {
-        //弹框类型
+        // 弹框类型
         update: "Edit",
         create: "Create"
       },
-      temp: {
-        //弹框数据
-        name: "",
-        set: "",
-        age: "",
-        diaProvince: "",
-        diaCity: "",
-        symDate: "",
-        symptom: "",
-        detecDate: ""
-      }
+      temp: {},
+      queryValue: ""
     };
   },
-  components: {},
   created() {
     this.getList();
   },
   methods: {
     getList() {
-      //获取用户列表数据
+      // 获取用户列表数据
       this.listLoading = true;
-      fetchListPatient({ pageSizes: 999 }).then(response => {
-        const { records } = response.data;
-        console.log(response);
-        this.list = records;
-        // Just to simulate the time of the request
-        setTimeout(() => {
-          this.listLoading = false;
-        }, 1.5 * 1000);
-      });
+      fetchListPatient({ pageSizes: 20, currentPage: this.currentPage }).then(
+        response => {
+          const { records, total } = response.data;
+          this.list = records;
+          this.newList = records;
+          this.total = total;
+          // Just to simulate the time of the request
+          setTimeout(() => {
+            this.listLoading = false;
+          }, 1.5 * 1000);
+        }
+      );
     },
     handleCreate() {
       // 添加新用户
       this.temp = {
-        //弹框数据
-        name: "",
-        set: "",
         age: "",
-        diaProvince: "",
+        detecDate: "",
         diaCity: "",
+        diaHospital: "",
+        diaProvince: "",
+        diagDate: "2020-08-05",
+        isDoc: true,
+        name: "",
+        sex: null,
         symDate: "",
-        symptom: "",
-        detecDate: ""
+        symptom: ""
       };
       this.dialogStatus = "create";
       this.dialogFormVisible = true;
     },
     handleUpdate(row) {
-      //更新用户信息
+      // 更新用户信息
       this.temp = Object.assign({}, row); // copy obj
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
@@ -215,7 +270,8 @@ export default {
       this.$refs["dataForm"].validate(valid => {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
-          updateArticle(tempData).then(() => {
+          console.log(tempData);
+          updatePatient(tempData).then(() => {
             const index = this.list.findIndex(v => v.id === this.temp.id);
             this.list.splice(index, 1, this.temp);
             this.dialogFormVisible = false;
@@ -232,6 +288,7 @@ export default {
     createData() {
       this.$refs["dataForm"].validate(valid => {
         if (valid) {
+          console.log(this.temp);
           createPatient(this.temp).then(() => {
             this.list.unshift(this.temp);
             this.dialogFormVisible = false;
@@ -246,8 +303,8 @@ export default {
       });
     },
     handleDelete(row, index) {
-      //删除用户信息
-      deleteArticle([row.id]).then(() => {
+      // 删除用户信息
+      deletePatient([row.id]).then(() => {
         this.$notify({
           title: "Success",
           message: "Delete Successfully",
@@ -262,6 +319,24 @@ export default {
       if (prop === "id") {
         this.sortByID(order);
       }
+    },
+    inputChange() {
+      if (!this.queryValue) {
+        this.list = this.newList;
+      }
+    },
+    handleQuery() {
+      if (this.queryValue) {
+        this.list = this.newList.filter(item => {
+          return item.name.indexOf(this.queryValue) > -1;
+        });
+      } else {
+        this.list = this.newList;
+      }
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this.getList();
     }
   }
 };
@@ -269,6 +344,10 @@ export default {
 
 <style lang="scss">
 .app-container {
+  .pagination {
+    text-align: center;
+    margin: 20px 0;
+  }
   .el-dialog {
     width: 600px;
   }

@@ -51,7 +51,7 @@ export function fetchListPatient(query) {
 
 export function createPatient(data) {
   return request({
-    url: "/admin/register",
+    url: "/patient/admin",
     method: "post",
     data
   });
@@ -59,7 +59,7 @@ export function createPatient(data) {
 
 export function updatePatient(data) {
   return request({
-    url: "/admin",
+    url: "/patient/admin",
     method: "put",
     data
   });
@@ -67,8 +67,66 @@ export function updatePatient(data) {
 
 export function deletePatient(data) {
   return request({
-    url: "/admin",
+    url: "/patient/admin",
     method: "DELETE",
     data
+  });
+}
+
+// 武汉中心医院患者
+
+export function fetchListPatmet(query) {
+  return request({
+    url: "/patient/pat-med/byHospital",
+    method: "get",
+    params: query
+  });
+}
+
+export function createPatmet(data) {
+  return request({
+    url: "/patient/admin",
+    method: "post",
+    data
+  });
+}
+
+export function updatePatmet(data) {
+  return request({
+    url: "/patient/admin",
+    method: "put",
+    data
+  });
+}
+
+export function deletePatmet(data) {
+  return request({
+    url: "/patient/admin",
+    method: "DELETE",
+    data
+  });
+}
+
+// 各省市病例数据分布
+export function getbyAllProvince() {
+  return request({
+    url: "/patient/admin/byAllProvince",
+    method: "get"
+  });
+}
+
+// 查询每日痊愈-死亡-累计人数
+export function getbyAllDaily() {
+  return request({
+    url: "/patient/admin/daily",
+    method: "get"
+  });
+}
+
+//按名称查询
+export function queryName() {
+  return request({
+    url: "/patient/admin/byname",
+    method: "get"
   });
 }
